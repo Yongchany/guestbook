@@ -4,7 +4,9 @@ import kr.ac.pool.guestbook.dto.GuestbookDTO;
 import kr.ac.pool.guestbook.service.GuestbookService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
 
+@SpringBootTest
 public class GuestBookServiceTests {
 
     @Autowired
@@ -14,7 +16,7 @@ public class GuestBookServiceTests {
     public void testRegister(){
         GuestbookDTO guestbookDTO = GuestbookDTO.builder()
                 .title("Sample Title...")
-                .content("Sample Conent...")
+                .content("Sample Content...")
                 .writer("userSample")
                 .build();
 
