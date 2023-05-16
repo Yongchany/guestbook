@@ -37,6 +37,6 @@ public class GuestbookServiceImpl implements GuestbookService{
         Function<GuestBook, GuestbookDTO> fn = (entity -> entityToDto(entity));
 
         return new PageResultDTO<>(result, fn);
-        return null;
+
     }
 }

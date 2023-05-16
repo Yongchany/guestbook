@@ -2,6 +2,7 @@ package kr.ac.pool.guestbook.controller.service;
 
 import kr.ac.pool.guestbook.dto.GuestbookDTO;
 import kr.ac.pool.guestbook.dto.PageRequestDTO;
+import kr.ac.pool.guestbook.dto.PageResultDTO;
 import kr.ac.pool.guestbook.entity.GuestBook;
 import kr.ac.pool.guestbook.service.GuestbookService;
 import org.junit.jupiter.api.Test;
@@ -30,7 +31,7 @@ public class GuestBookServiceTests {
                 .page(1)
                 .size(10)
                 .build();
-        PageResultDTO<GuestbookDTO, Guestbook> resultDTO = service.getList(pageRequestDTO);
+        PageResultDTO<GuestbookDTO, GuestBook> resultDTO = service.getList(pageRequestDTO);
 
         System.out.println("PREV:" + resultDTO.isPrev());
         System.out.println("NEXT:" + resultDTO.isNext());
@@ -41,6 +42,5 @@ public class GuestBookServiceTests {
         }
         System.out.println("===========================================");
         resultDTO.getPageList().forEach(i -> System.out.println(i));
-    }
     }
 }
