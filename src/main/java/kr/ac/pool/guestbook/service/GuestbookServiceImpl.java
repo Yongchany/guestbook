@@ -1,9 +1,12 @@
 package kr.ac.pool.guestbook.service;
 
+import com.querydsl.core.BooleanBuilder;
+import com.querydsl.core.types.dsl.BooleanExpression;
 import kr.ac.pool.guestbook.dto.GuestbookDTO;
 import kr.ac.pool.guestbook.dto.PageRequestDTO;
 import kr.ac.pool.guestbook.dto.PageResultDTO;
 import kr.ac.pool.guestbook.entity.GuestBook;
+import kr.ac.pool.guestbook.entity.QGuestBook;
 import kr.ac.pool.guestbook.repository.GuestBookRepositoty;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -12,13 +15,14 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
+import java.awt.print.Pageable;
 import java.util.Optional;
 import java.util.function.Function;
 
 @Service
 @Log4j2
 @RequiredArgsConstructor
-public class GuestbookServiceImpl implements GuestbookService{
+public class GuestBookServiceImpl implements GuestbookService{
     private final GuestBookRepositoty repositoty;
     @Override
     public Long register(GuestbookDTO dto) {
@@ -32,7 +36,8 @@ public class GuestbookServiceImpl implements GuestbookService{
     @Override
     public PageResultDTO<GuestbookDTO, GuestBook> getList(PageRequestDTO requestDTO) {
         PageRequest pageable = requestDTO.getPageable(Sort.by("gno").descending());
-        Page<GuestBook> result = repositoty.findAll(pageable);
+        BooleanBuilder booleanBuilder = getSearch(requestDTO);
+        Page<GuestBook> result = repositoty.findAll(booleanBuilder, pageable);
         Function<GuestBook, GuestbookDTO> fn = (entity -> entityToDto(entity));
 
         return new PageResultDTO<>(result, fn);
@@ -42,5 +47,54 @@ public class GuestbookServiceImpl implements GuestbookService{
     public GuestbookDTO read(Long gno) {
         Optional<GuestBook> result = repositoty.findById(gno);
         return result.isPresent()? entityToDto(result.get()): null;
+    }
+
+    @Override
+    public void modify(GuestbookDTO dto) {
+        Optional<GuestBook> result = repositoty.findById(dto.getGno());
+        if(result.isPresent()){
+            GuestBook entity = result.get();
+            entity.changeTitle(dto.getTitle());
+            entity.changeContent(dto.getContent());
+            repositoty.save(entity);
+        }
+    }
+
+    @Override
+    public void remove(Long gno) {
+        repositoty.deleteById(gno);
+    }
+
+    // 검색 조회 기능은 QueryDSL을 사용한다.
+    @Override
+    public BooleanBuilder getSearch(PageRequestDTO requestDTO) {
+        String type = requestDTO.getType();
+        String keyword = requestDTO.getKeyword();
+        BooleanBuilder booleanBuilder = new BooleanBuilder();
+        QGuestBook qGuestBook = QGuestBook.guestBook;
+        BooleanExpression expression = qGuestBook.gno.gt(0L);
+
+        booleanBuilder.and(expression);
+
+        // 검색형식이 선택되어 있지 않은 경우
+        if (type == null || type.trim().length()==0){
+            return booleanBuilder;
+        }
+
+        // 검색조건 작성
+        BooleanBuilder conditionBuilder = new BooleanBuilder();
+        if (type.contains("t")){
+            conditionBuilder.or(qGuestBook.title.contains(keyword));
+        }
+        if (type.contains("c")){
+            conditionBuilder.or(qGuestBook.content.contains(keyword));
+        }
+        if (type.contains("w")){
+            conditionBuilder.or(qGuestBook.writer.contains(keyword));
+        }
+
+        booleanBuilder.and(conditionBuilder);
+
+        return booleanBuilder;
     }
 }
